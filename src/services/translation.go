@@ -27,6 +27,24 @@ type Chunk struct {
 	count int // how many fields in this chunk
 }
 
+type CategoryNameMapping struct {
+	Source string `json: "source"`
+	Target string `json: "target"`
+}
+
+type CategoryNameMappings []CategoryNameMapping
+
+// FindTarget looks up the target (translated) value for a given source string.
+// Returns the target and true if found, or empty string and false if not found.
+func (c CategoryNameMappings) FindTarget(source string) string {
+	for _, m := range c {
+		if m.Source == source {
+			return m.Target
+		}
+	}
+	return ""
+}
+
 // extractJSONStrings scans raw JSON text char-by-char, finds every string
 // literal, and replaces any value that isn't "label" or "children" with a
 // placeholder like "{0}", "{1}", etc. Returns the templated JSON (still
@@ -86,11 +104,13 @@ func rebuildJSON(template string, translated []string) string {
 
 const delimiter = "<SPLIT/>"
 
-func (s *TranslationService) translateCategoryOrder(categoryOrderJSON string, targetLang language.Tag) (string, error) {
+func (s *TranslationService) translateCategoryOrder(categoryOrderJSON string, targetLang language.Tag) (string, CategoryNameMappings, error) {
+	const delimiter = "###SPLIT###"
+
 	template, extracted := extractJSONStrings(categoryOrderJSON)
 
 	if len(extracted) == 0 {
-		return categoryOrderJSON, nil // nothing to translate
+		return categoryOrderJSON, nil, nil // nothing to translate
 	}
 
 	text := strings.Join(extracted, delimiter)
@@ -102,15 +122,26 @@ func (s *TranslationService) translateCategoryOrder(categoryOrderJSON string, ta
 		&translate.Options{Format: translate.Text},
 	)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	translatedParts := strings.Split(result[0].Text, delimiter)
 	if len(translatedParts) != len(extracted) {
-		return "", fmt.Errorf("translation split mismatch: got %d parts, expected %d", len(translatedParts), len(extracted))
+		return "", nil, fmt.Errorf("translation split mismatch: got %d parts, expected %d", len(translatedParts), len(extracted))
 	}
 
-	return rebuildJSON(template, translatedParts), nil
+	// Build the source -> target mapping
+	cnm := make([]CategoryNameMapping, 0, len(extracted))
+	for i, source := range extracted {
+		cnm = append(cnm, CategoryNameMapping{
+			Source: source,
+			Target: translatedParts[i],
+		})
+	}
+
+	translatedJSON := rebuildJSON(template, translatedParts)
+
+	return translatedJSON, cnm, nil
 }
 
 // func (s *TranslationService) splitText(text string, maxChunkSize int, delimiter string) []Chunk {
@@ -208,7 +239,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		return nil, err
 	}
 
-	translatedCategoryOrder, err := s.translateCategoryOrder(menuDto.MenuConfiguration.CategoryOrder, parsedLanguageTag)
+	translatedCategoryOrder, categoryMapping, err := s.translateCategoryOrder(menuDto.MenuConfiguration.CategoryOrder, parsedLanguageTag)
 	if err != nil {
 		return nil, err
 	}
@@ -252,11 +283,11 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 			menuStringRep = append(menuStringRep, "no allergens")
 		}
 
-		if len(item.Category) > 0 {
-			menuStringRep = append(menuStringRep, item.Category)
-		} else {
-			menuStringRep = append(menuStringRep, "no category")
-		}
+		// if len(item.Category) > 0 {
+		// 	menuStringRep = append(menuStringRep, item.Category)
+		// } else {
+		// 	menuStringRep = append(menuStringRep, "no category")
+		// }
 
 		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
 
@@ -310,12 +341,12 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		menuDto.MenuItems[i].Name = translatedStringParts[translatedIndex]
 		menuDto.MenuItems[i].Description = translatedStringParts[translatedIndex+1]
 		menuDto.MenuItems[i].Allergens = translatedStringParts[translatedIndex+2]
-		menuDto.MenuItems[i].Category = translatedStringParts[translatedIndex+3]
+		menuDto.MenuItems[i].Category = categoryMapping.FindTarget(menuDto.MenuItems[i].Category)
 		// fmt.Println("Translated item name:", menuDto.MenuItems[i].Name)
 		// fmt.Println("Translated item desc:", menuDto.MenuItems[i].Description)
 		// fmt.Println("Translated item allergens:", menuDto.MenuItems[i].Allergens)
 		// fmt.Println("Translated item category:", menuDto.MenuItems[i].Category)
-		translatedIndex += 4
+		translatedIndex += 3
 	}
 
 	return &menuDto, nil
