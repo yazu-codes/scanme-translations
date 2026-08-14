@@ -105,7 +105,7 @@ func rebuildJSON(template string, translated []string) string {
 const delimiter = "<SPLIT/>"
 
 func (s *TranslationService) translateCategoryOrder(categoryOrderJSON string, targetLang language.Tag) (string, CategoryNameMappings, error) {
-	const delimiter = "###SPLIT###"
+	const delimiter = "<SPLIT/>"
 
 	template, extracted := extractJSONStrings(categoryOrderJSON)
 
