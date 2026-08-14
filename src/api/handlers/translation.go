@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yazu-codes/scanme-translations.git/src/dto"
@@ -56,11 +58,48 @@ func (h *TranslationHandler) Translate(c *gin.Context) {
 		return
 	}
 
+	key := req.Menu.MenuOwner.Name + "_" + req.TargetLanguage
+
+	// TODO: If there is req.Menu.MenuOwner.Name+"_"+req.TargetLanguage in redis, pull the information from there and serve it and return
+	exists, err := h.redisService.Exists(c, key)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis translation failed"})
+		return
+	}
+
+	if exists {
+		cached, err := h.redisService.Get(c, key)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis pull failed"})
+			return
+		}
+		if cached != "" {
+			var cachedMenu dto.PublicMenu
+			if err := json.Unmarshal([]byte(cached), &cachedMenu); err == nil {
+				c.JSON(http.StatusOK, cachedMenu)
+				return
+			}
+		}
+	}
+
 	translatedMenu, err := h.translationService.Translate(req.Menu, req.SourceLanguage, req.TargetLanguage)
 	if err != nil {
 		h.logger.Error("Translation failed", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Translation failed"})
 		return
+	}
+
+	// TODO: Save translated menu as req.Menu.MenuOwner.Name+"_"+req.TargetLanguage in redis
+	// Save translated menu as req.Menu.MenuOwner.Name+"_"+req.TargetLanguage in redis
+	data, err := json.Marshal(translatedMenu)
+	if err != nil {
+		h.logger.Error("Failed to marshal translated menu for caching", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Translation failed: Failed to marshal translated menu for caching"})
+	} else {
+		if err := h.redisService.Set(c.Request.Context(), key, string(data), 7*24*time.Hour); err != nil {
+			h.logger.Error("Failed to cache translated menu", "error", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Save to cache failed"})
+		}
 	}
 
 	h.logger.Info("Translation successful", "target_language", req.TargetLanguage)
