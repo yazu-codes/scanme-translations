@@ -25,7 +25,7 @@ func main() {
 			Level: slog.LevelInfo,
 		}),
 	)
-	logger = logger.With(slog.String("component", "auth_service"))
+	logger = logger.With(slog.String("component", "translation_service"))
 
 	var config *util.ConfigReader = util.NewConfigReader()
 	config.Setup()

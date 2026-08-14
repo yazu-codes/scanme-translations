@@ -72,6 +72,8 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 	text := strings.Join(menuStringRep, "{0}")
 
+	fmt.Println("MENU STRING REP LENGTH:", len(text))
+
 	parsedLanguageTag, err := language.Parse(targetLanguage)
 	if err != nil {
 		return nil, err
