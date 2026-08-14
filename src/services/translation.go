@@ -165,7 +165,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
 
 		if translationLength > maxChunkSize || i == len(menuDto.MenuItems)-1 {
-			text := strings.Join(menuStringRep, "<donottranslate/>")
+			text := strings.Join(menuStringRep, "<e/>")
 
 			fmt.Println("MENU STRING REP LENGTH:", len(text))
 			fmt.Println(text)
@@ -179,7 +179,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 			translatedMenu += translatedStringRep[0].Text
 			if i != len(menuDto.MenuItems)-1 {
-				translatedMenu += "<donottranslate/>"
+				translatedMenu += "<e/>"
 			}
 
 			menuStringRep = []string{}
@@ -188,7 +188,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		}
 	}
 
-	// text := strings.Join(menuStringRep, "<donottranslate/>")
+	// text := strings.Join(menuStringRep, "<e/>")
 
 	// fmt.Println("MENU STRING REP LENGTH:", len(text))
 
@@ -199,7 +199,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 	// fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
 
-	translatedStringParts := strings.Split(translatedMenu, "<donottranslate/>")
+	translatedStringParts := strings.Split(translatedMenu, "<e/>")
 
 	menuDto.MenuOwner.Name = translatedStringParts[0]
 	menuDto.MenuOwner.Slogan = translatedStringParts[1]
