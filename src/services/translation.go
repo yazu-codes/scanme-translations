@@ -108,7 +108,15 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	// representation, translated by google translate api and then parsed back into the menu owner info, item names,
 	// descriptions and allergens fields.
 	// Direct replacement, not introducing new fields.
-	const maxChunkSize = 4500
+	translatedMenu := ""
+	const maxChunkSize = 3000
+
+	parsedLanguageTag, err := language.Parse(targetLanguage)
+	if err != nil {
+		return nil, err
+	}
+
+	translationLength := len(menuDto.MenuOwner.Name) + len(menuDto.MenuOwner.Slogan) + len(menuDto.MenuConfiguration.CategoryOrder)
 
 	menuStringRep := []string{}
 	menuStringRep = append(menuStringRep, menuDto.MenuOwner.Name)
@@ -120,43 +128,30 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		menuStringRep = append(menuStringRep, item.Description)
 		menuStringRep = append(menuStringRep, item.Allergens)
 		menuStringRep = append(menuStringRep, item.Category)
-	}
 
-	text := strings.Join(menuStringRep, "{0}")
+		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
 
-	fmt.Println("MENU STRING REP LENGTH:", len(text))
+		if translationLength > maxChunkSize {
+			text := strings.Join(menuStringRep, "{0}")
 
-	parsedLanguageTag, err := language.Parse(targetLanguage)
-	if err != nil {
-		return nil, err
-	}
+			fmt.Println("MENU STRING REP LENGTH:", len(text))
 
-	//////////////////////////////
+			translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, nil)
+			if err != nil {
+				return nil, err
+			}
 
-	// Split into chunks
-	chunks := s.splitText(text, maxChunkSize, "{0}")
-	fmt.Printf("Split into %d chunks\n", len(chunks))
+			fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
 
-	// Translate all chunks
-	translatedStringParts := make([]string, len(menuStringRep))
+			translatedMenu += translatedStringRep[0].Text
 
-	for i, chunk := range chunks {
-		fmt.Printf("Translating chunk %d/%d (%d chars, fields %d-%d)\n",
-			i+1, len(chunks), len(chunk.text), chunk.start, chunk.start+chunk.count-1)
-		fmt.Println("WHOLE STRING:", chunk.text)
-		result, err := s.translateClient.Translate(s.ctx, []string{chunk.text}, parsedLanguageTag, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		// Split translated result and map back to original indices
-		tempTranslatedParts := strings.Split(result[0].Text, "{0}")
-		for j, translatedPart := range tempTranslatedParts {
-			translatedStringParts[chunk.start+j] = translatedPart
+			menuStringRep = []string{}
 		}
 	}
 
-	//////////////////////////////
+	// text := strings.Join(menuStringRep, "{0}")
+
+	// fmt.Println("MENU STRING REP LENGTH:", len(text))
 
 	// translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, nil)
 	// if err != nil {
@@ -165,7 +160,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 	// fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
 
-	// translatedStringParts := strings.Split(translatedStringRep[0].Text, "{0}")
+	translatedStringParts := strings.Split(translatedMenu, "{0}")
 
 	menuDto.MenuOwner.Name = translatedStringParts[0]
 	menuDto.MenuOwner.Slogan = translatedStringParts[1]
