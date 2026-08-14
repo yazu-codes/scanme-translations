@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/yazu-codes/scanme-translations.git/src/dto"
 	"golang.org/x/text/language"
@@ -113,6 +114,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	// Direct replacement, not introducing new fields.
 	translatedMenu := ""
 	const maxChunkSize = 2000
+	const delayBetweenChunks = 200 * time.Millisecond // Safe buffer
 
 	parsedLanguageTag, err := language.Parse(targetLanguage)
 	if err != nil {
@@ -185,6 +187,8 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 			menuStringRep = []string{}
 
 			translationLength = 0
+
+			time.Sleep(delayBetweenChunks)
 		}
 	}
 
