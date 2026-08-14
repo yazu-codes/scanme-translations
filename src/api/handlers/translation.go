@@ -63,6 +63,7 @@ func (h *TranslationHandler) Translate(c *gin.Context) {
 	// TODO: If there is req.Menu.MenuOwner.Name+"_"+req.TargetLanguage in redis, pull the information from there and serve it and return
 	exists, err := h.redisService.Exists(c, key)
 	if err != nil {
+		h.logger.Info("Menu Translation Cache Record Found!")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis translation failed"})
 		return
 	}
