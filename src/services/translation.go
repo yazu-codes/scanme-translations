@@ -132,7 +132,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		if len(item.Allergens) > 0 {
 			menuStringRep = append(menuStringRep, item.Allergens)
 		} else {
-			menuStringRep = append(menuStringRep, " ")
+			menuStringRep = append(menuStringRep, "без алергени")
 		}
 
 		menuStringRep = append(menuStringRep, item.Category)
