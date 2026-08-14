@@ -223,8 +223,8 @@ func NewTranslationService(googleCreds string) *TranslationService {
 }
 
 func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, targetLanguage string) (*dto.PublicMenu, error) {
-	fmt.Println("TRANSLATING MENU BEGIN:", menuDto)
-	fmt.Println("TRANSLATING TO LANGUAGE:", targetLanguage)
+	// fmt.Println("TRANSLATING MENU BEGIN:", menuDto)
+	// fmt.Println("TRANSLATING TO LANGUAGE:", targetLanguage)
 
 	// TODO: menuDTO owner information and menu item names, description, allergens should be converted to a string
 	// representation, translated by google translate api and then parsed back into the menu owner info, item names,
@@ -294,15 +294,15 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		if translationLength > maxChunkSize || i == len(menuDto.MenuItems)-1 {
 			text := strings.Join(menuStringRep, "<e/>")
 
-			fmt.Println("MENU STRING REP LENGTH:", len(text))
-			fmt.Println(text)
+			// fmt.Println("MENU STRING REP LENGTH:", len(text))
+			// fmt.Println(text)
 
 			translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, nil)
 			if err != nil {
 				return nil, err
 			}
 
-			fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
+			// fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
 
 			translatedMenu += translatedStringRep[0].Text
 			if i != len(menuDto.MenuItems)-1 {
@@ -334,7 +334,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	menuDto.MenuOwner.Slogan = translatedStringParts[1]
 	// menuDto.MenuConfiguration.CategoryOrder = translatedStringParts[2]
 
-	fmt.Println(strings.Join(translatedStringParts, "\n"))
+	// fmt.Println(strings.Join(translatedStringParts, "\n"))
 
 	translatedIndex := 2
 	for i, _ := range menuDto.MenuItems {
