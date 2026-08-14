@@ -183,6 +183,8 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 			}
 
 			menuStringRep = []string{}
+
+			translationLength = 0
 		}
 	}
 
