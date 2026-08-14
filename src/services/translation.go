@@ -177,7 +177,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 			fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
 
-			translatedMenu += translatedStringRep[0].Text
+			translatedMenu += translatedStringRep[0].Text + "{0}"
 
 			menuStringRep = []string{}
 		}
