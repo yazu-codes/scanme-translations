@@ -211,10 +211,10 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		menuDto.MenuItems[i].Description = translatedStringParts[translatedIndex+1]
 		menuDto.MenuItems[i].Allergens = translatedStringParts[translatedIndex+2]
 		menuDto.MenuItems[i].Category = translatedStringParts[translatedIndex+3]
-		fmt.Println("Translated item name:", menuDto.MenuItems[i].Name)
-		fmt.Println("Translated item desc:", menuDto.MenuItems[i].Description)
-		fmt.Println("Translated item allergens:", menuDto.MenuItems[i].Allergens)
-		fmt.Println("Translated item category:", menuDto.MenuItems[i].Category)
+		// fmt.Println("Translated item name:", menuDto.MenuItems[i].Name)
+		// fmt.Println("Translated item desc:", menuDto.MenuItems[i].Description)
+		// fmt.Println("Translated item allergens:", menuDto.MenuItems[i].Allergens)
+		// fmt.Println("Translated item category:", menuDto.MenuItems[i].Category)
 		translatedIndex += 4
 	}
 
