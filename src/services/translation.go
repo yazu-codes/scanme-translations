@@ -126,13 +126,13 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	if len(menuDto.MenuOwner.Name) > 0 {
 		menuStringRep = append(menuStringRep, menuDto.MenuOwner.Name)
 	} else {
-		menuStringRep = append(menuStringRep, " ")
+		menuStringRep = append(menuStringRep, "no name")
 	}
 
 	if len(menuDto.MenuOwner.Slogan) > 0 {
 		menuStringRep = append(menuStringRep, menuDto.MenuOwner.Slogan)
 	} else {
-		menuStringRep = append(menuStringRep, " ")
+		menuStringRep = append(menuStringRep, "no slogan")
 	}
 	// menuStringRep = append(menuStringRep, menuDto.MenuConfiguration.CategoryOrder)
 
@@ -141,25 +141,25 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		if len(item.Name) > 0 {
 			menuStringRep = append(menuStringRep, item.Name)
 		} else {
-			menuStringRep = append(menuStringRep, " ")
+			menuStringRep = append(menuStringRep, "no name")
 		}
 
 		if len(item.Description) > 0 {
 			menuStringRep = append(menuStringRep, item.Description)
 		} else {
-			menuStringRep = append(menuStringRep, " ")
+			menuStringRep = append(menuStringRep, "no description")
 		}
 
 		if len(item.Allergens) > 0 {
 			menuStringRep = append(menuStringRep, item.Allergens)
 		} else {
-			menuStringRep = append(menuStringRep, " ")
+			menuStringRep = append(menuStringRep, "no allergens")
 		}
 
 		if len(item.Category) > 0 {
 			menuStringRep = append(menuStringRep, item.Category)
 		} else {
-			menuStringRep = append(menuStringRep, " ")
+			menuStringRep = append(menuStringRep, "no category")
 		}
 
 		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
@@ -177,7 +177,10 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 			fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
 
-			translatedMenu += translatedStringRep[0].Text + "{0}"
+			translatedMenu += translatedStringRep[0].Text
+			if i != len(menuDto.MenuItems)-1 {
+				translatedMenu += "{0}"
+			}
 
 			menuStringRep = []string{}
 		}
