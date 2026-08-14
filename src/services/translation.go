@@ -143,7 +143,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	for i, chunk := range chunks {
 		fmt.Printf("Translating chunk %d/%d (%d chars, fields %d-%d)\n",
 			i+1, len(chunks), len(chunk.text), chunk.start, chunk.start+chunk.count-1)
-
+		fmt.Println("WHOLE STRING:", chunk.text)
 		result, err := s.translateClient.Translate(s.ctx, []string{chunk.text}, parsedLanguageTag, nil)
 		if err != nil {
 			return nil, err
