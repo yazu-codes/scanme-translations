@@ -112,7 +112,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	// descriptions and allergens fields.
 	// Direct replacement, not introducing new fields.
 	translatedMenu := ""
-	const maxChunkSize = 3000
+	const maxChunkSize = 1000
 
 	parsedLanguageTag, err := language.Parse(targetLanguage)
 	if err != nil {
@@ -147,7 +147,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		if len(item.Description) > 0 {
 			menuStringRep = append(menuStringRep, item.Description)
 		} else {
-			menuStringRep = append(menuStringRep, "без алергени")
+			menuStringRep = append(menuStringRep, "без описание")
 		}
 
 		if len(item.Allergens) > 0 {
