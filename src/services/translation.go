@@ -19,6 +19,57 @@ type TranslationService struct {
 	ctx             context.Context
 }
 
+type Chunk struct {
+	text  string
+	start int // which field index this chunk starts at
+	count int // how many fields in this chunk
+}
+
+func (s *TranslationService) splitText(text string, maxChunkSize int, delimiter string) []Chunk {
+	parts := strings.Split(text, delimiter)
+
+	var chunks []Chunk
+	var currentChunk strings.Builder
+	var startIdx int
+	var fieldCount int
+	var currentSize int
+
+	for i, part := range parts {
+		partSize := len(part) + len(delimiter)
+
+		// If adding this part exceeds limit and we have fields, save chunk
+		if currentSize+partSize > maxChunkSize && fieldCount > 0 {
+			chunks = append(chunks, Chunk{
+				text:  currentChunk.String(),
+				start: startIdx,
+				count: fieldCount,
+			})
+			currentChunk.Reset()
+			startIdx = i
+			fieldCount = 0
+			currentSize = 0
+		}
+
+		if currentChunk.Len() > 0 {
+			currentChunk.WriteString(delimiter)
+		}
+		currentChunk.WriteString(part)
+		currentSize += partSize
+		fieldCount++
+	}
+
+	// Add remaining chunk
+	if fieldCount > 0 {
+		chunks = append(chunks, Chunk{
+			text:  currentChunk.String(),
+			start: startIdx,
+			count: fieldCount,
+		})
+	}
+
+	return chunks
+}
+
 func initTranslateClient(credentialsJSON string, ctx context.Context) *translate.Client {
 	// Create tmp directory if it doesn't exist
 	err := os.MkdirAll("tmp", 0755)
@@ -57,6 +108,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	// representation, translated by google translate api and then parsed back into the menu owner info, item names,
 	// descriptions and allergens fields.
 	// Direct replacement, not introducing new fields.
+	const maxChunkSize = 4500
 
 	menuStringRep := []string{}
 	menuStringRep = append(menuStringRep, menuDto.MenuOwner.Name)
@@ -79,14 +131,41 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		return nil, err
 	}
 
-	translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, nil)
-	if err != nil {
-		return nil, err
+	//////////////////////////////
+
+	// Split into chunks
+	chunks := s.splitText(text, maxChunkSize, "{0}")
+	fmt.Printf("Split into %d chunks\n", len(chunks))
+
+	// Translate all chunks
+	translatedStringParts := make([]string, len(menuStringRep))
+
+	for i, chunk := range chunks {
+		fmt.Printf("Translating chunk %d/%d (%d chars, fields %d-%d)\n",
+			i+1, len(chunks), len(chunk.text), chunk.start, chunk.start+chunk.count-1)
+
+		result, err := s.translateClient.Translate(s.ctx, []string{chunk.text}, parsedLanguageTag, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// Split translated result and map back to original indices
+		tempTranslatedParts := strings.Split(result[0].Text, "{0}")
+		for j, translatedPart := range tempTranslatedParts {
+			translatedStringParts[chunk.start+j] = translatedPart
+		}
 	}
 
-	fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
+	//////////////////////////////
 
-	translatedStringParts := strings.Split(translatedStringRep[0].Text, "{0}")
+	// translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, nil)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
+
+	// translatedStringParts := strings.Split(translatedStringRep[0].Text, "{0}")
 
 	menuDto.MenuOwner.Name = translatedStringParts[0]
 	menuDto.MenuOwner.Slogan = translatedStringParts[1]
