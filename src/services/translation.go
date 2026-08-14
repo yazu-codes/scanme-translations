@@ -105,6 +105,7 @@ func NewTranslationService(googleCreds string) *TranslationService {
 
 func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, targetLanguage string) (*dto.PublicMenu, error) {
 	fmt.Println("TRANSLATING MENU BEGIN:", menuDto)
+	fmt.Println("TRANSLATING TO LANGUAGE:", targetLanguage)
 
 	// TODO: menuDTO owner information and menu item names, description, allergens should be converted to a string
 	// representation, translated by google translate api and then parsed back into the menu owner info, item names,
