@@ -135,6 +135,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 			text := strings.Join(menuStringRep, "{0}")
 
 			fmt.Println("MENU STRING REP LENGTH:", len(text))
+			fmt.Println(text)
 
 			translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, nil)
 			if err != nil {
