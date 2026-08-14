@@ -126,13 +126,13 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	if len(menuDto.MenuOwner.Name) > 0 {
 		menuStringRep = append(menuStringRep, menuDto.MenuOwner.Name)
 	} else {
-		menuStringRep = append(menuStringRep, "без име на заведение")
+		menuStringRep = append(menuStringRep, " ")
 	}
 
 	if len(menuDto.MenuOwner.Slogan) > 0 {
 		menuStringRep = append(menuStringRep, menuDto.MenuOwner.Slogan)
 	} else {
-		menuStringRep = append(menuStringRep, "без слоган")
+		menuStringRep = append(menuStringRep, " ")
 	}
 	// menuStringRep = append(menuStringRep, menuDto.MenuConfiguration.CategoryOrder)
 
@@ -141,25 +141,25 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		if len(item.Name) > 0 {
 			menuStringRep = append(menuStringRep, item.Name)
 		} else {
-			menuStringRep = append(menuStringRep, "без име")
+			menuStringRep = append(menuStringRep, " ")
 		}
 
 		if len(item.Description) > 0 {
 			menuStringRep = append(menuStringRep, item.Description)
 		} else {
-			menuStringRep = append(menuStringRep, "без описание")
+			menuStringRep = append(menuStringRep, " ")
 		}
 
 		if len(item.Allergens) > 0 {
 			menuStringRep = append(menuStringRep, item.Allergens)
 		} else {
-			menuStringRep = append(menuStringRep, "без алергени")
+			menuStringRep = append(menuStringRep, " ")
 		}
 
 		if len(item.Category) > 0 {
 			menuStringRep = append(menuStringRep, item.Category)
 		} else {
-			menuStringRep = append(menuStringRep, "без категория")
+			menuStringRep = append(menuStringRep, " ")
 		}
 
 		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
