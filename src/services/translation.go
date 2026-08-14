@@ -128,7 +128,13 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	for i, item := range menuDto.MenuItems {
 		menuStringRep = append(menuStringRep, item.Name)
 		menuStringRep = append(menuStringRep, item.Description)
-		menuStringRep = append(menuStringRep, item.Allergens)
+
+		if len(item.Allergens) > 0 {
+			menuStringRep = append(menuStringRep, item.Allergens)
+		} else {
+			menuStringRep = append(menuStringRep, " ")
+		}
+
 		menuStringRep = append(menuStringRep, item.Category)
 
 		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
