@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,92 @@ type Chunk struct {
 	text  string
 	start int // which field index this chunk starts at
 	count int // how many fields in this chunk
+}
+
+// extractJSONStrings scans raw JSON text char-by-char, finds every string
+// literal, and replaces any value that isn't "label" or "children" with a
+// placeholder like "{0}", "{1}", etc. Returns the templated JSON (still
+// valid JSON syntax) and the list of extracted strings in order.
+func extractJSONStrings(jsonStr string) (template string, extracted []string) {
+	var sb strings.Builder
+	i := 0
+	n := len(jsonStr)
+	placeholderIdx := 0
+
+	for i < n {
+		c := jsonStr[i]
+		if c == '"' {
+			start := i
+			i++
+			for i < n {
+				if jsonStr[i] == '\\' && i+1 < n {
+					i += 2 // skip escaped char (e.g. \", \\, \n)
+					continue
+				}
+				if jsonStr[i] == '"' {
+					i++
+					break
+				}
+				i++
+			}
+			raw := jsonStr[start:i]        // includes quotes
+			content := raw[1 : len(raw)-1] // strip quotes
+
+			if content == "label" || content == "children" {
+				sb.WriteString(raw) // keep keys untouched
+			} else {
+				sb.WriteString(fmt.Sprintf("\"{%d}\"", placeholderIdx))
+				extracted = append(extracted, content)
+				placeholderIdx++
+			}
+		} else {
+			sb.WriteByte(c)
+			i++
+		}
+	}
+
+	return sb.String(), extracted
+}
+
+// rebuildJSON substitutes each placeholder with its translated value,
+// properly quoted/escaped for JSON.
+func rebuildJSON(template string, translated []string) string {
+	result := template
+	for idx, val := range translated {
+		placeholder := fmt.Sprintf("\"{%d}\"", idx)
+		escaped := strconv.Quote(val) // handles quotes, backslashes, unicode
+		result = strings.Replace(result, placeholder, escaped, 1)
+	}
+	return result
+}
+
+const delimiter = "\n|||\n"
+
+func (s *TranslationService) translateCategoryOrder(categoryOrderJSON string, targetLang language.Tag) (string, error) {
+	template, extracted := extractJSONStrings(categoryOrderJSON)
+
+	if len(extracted) == 0 {
+		return categoryOrderJSON, nil // nothing to translate
+	}
+
+	text := strings.Join(extracted, delimiter)
+
+	result, err := s.translateClient.Translate(
+		s.ctx,
+		[]string{text},
+		targetLang,
+		&translate.Options{Format: translate.Text},
+	)
+	if err != nil {
+		return "", err
+	}
+
+	translatedParts := strings.Split(result[0].Text, delimiter)
+	if len(translatedParts) != len(extracted) {
+		return "", fmt.Errorf("translation split mismatch: got %d parts, expected %d", len(translatedParts), len(extracted))
+	}
+
+	return rebuildJSON(template, translatedParts), nil
 }
 
 // func (s *TranslationService) splitText(text string, maxChunkSize int, delimiter string) []Chunk {
@@ -120,6 +207,13 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	if err != nil {
 		return nil, err
 	}
+
+	translatedCategoryOrder, err := s.translateCategoryOrder(menuDto.MenuConfiguration.CategoryOrder, parsedLanguageTag)
+	if err != nil {
+		return nil, err
+	}
+
+	menuDto.MenuConfiguration.CategoryOrder = translatedCategoryOrder
 
 	translationLength := len(menuDto.MenuOwner.Name) + len(menuDto.MenuOwner.Slogan) // + len(menuDto.MenuConfiguration.CategoryOrder)
 
