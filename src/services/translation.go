@@ -105,19 +105,15 @@ func rebuildJSON(template string, translated []string) string {
 const delimiter = "<SPLIT/>"
 
 func (s *TranslationService) translateCategoryOrder(categoryOrderJSON string, targetLang language.Tag) (string, CategoryNameMappings, error) {
-	const delimiter = "<SPLIT/>"
-
 	template, extracted := extractJSONStrings(categoryOrderJSON)
 
 	if len(extracted) == 0 {
 		return categoryOrderJSON, nil, nil // nothing to translate
 	}
 
-	text := strings.Join(extracted, delimiter)
-
-	result, err := s.translateClient.Translate(
+	results, err := s.translateClient.Translate(
 		s.ctx,
-		[]string{text},
+		extracted,
 		targetLang,
 		&translate.Options{Format: translate.Text},
 	)
@@ -125,17 +121,17 @@ func (s *TranslationService) translateCategoryOrder(categoryOrderJSON string, ta
 		return "", nil, err
 	}
 
-	translatedParts := strings.Split(result[0].Text, delimiter)
-	if len(translatedParts) != len(extracted) {
-		return "", nil, fmt.Errorf("translation split mismatch: got %d parts, expected %d", len(translatedParts), len(extracted))
+	if len(results) != len(extracted) {
+		return "", nil, fmt.Errorf("translation count mismatch: got %d, expected %d", len(results), len(extracted))
 	}
 
-	// Build the source -> target mapping
-	cnm := make([]CategoryNameMapping, 0, len(extracted))
-	for i, source := range extracted {
+	translatedParts := make([]string, len(results))
+	cnm := make(CategoryNameMappings, 0, len(extracted))
+	for i, r := range results {
+		translatedParts[i] = r.Text
 		cnm = append(cnm, CategoryNameMapping{
-			Source: source,
-			Target: translatedParts[i],
+			Source: extracted[i],
+			Target: r.Text,
 		})
 	}
 
