@@ -25,50 +25,50 @@ type Chunk struct {
 	count int // how many fields in this chunk
 }
 
-func (s *TranslationService) splitText(text string, maxChunkSize int, delimiter string) []Chunk {
-	parts := strings.Split(text, delimiter)
+// func (s *TranslationService) splitText(text string, maxChunkSize int, delimiter string) []Chunk {
+// 	parts := strings.Split(text, delimiter)
 
-	var chunks []Chunk
-	var currentChunk strings.Builder
-	var startIdx int
-	var fieldCount int
-	var currentSize int
+// 	var chunks []Chunk
+// 	var currentChunk strings.Builder
+// 	var startIdx int
+// 	var fieldCount int
+// 	var currentSize int
 
-	for i, part := range parts {
-		partSize := len(part) + len(delimiter)
+// 	for i, part := range parts {
+// 		partSize := len(part) + len(delimiter)
 
-		// If adding this part exceeds limit and we have fields, save chunk
-		if currentSize+partSize > maxChunkSize && fieldCount > 0 {
-			chunks = append(chunks, Chunk{
-				text:  currentChunk.String(),
-				start: startIdx,
-				count: fieldCount,
-			})
-			currentChunk.Reset()
-			startIdx = i
-			fieldCount = 0
-			currentSize = 0
-		}
+// 		// If adding this part exceeds limit and we have fields, save chunk
+// 		if currentSize+partSize > maxChunkSize && fieldCount > 0 {
+// 			chunks = append(chunks, Chunk{
+// 				text:  currentChunk.String(),
+// 				start: startIdx,
+// 				count: fieldCount,
+// 			})
+// 			currentChunk.Reset()
+// 			startIdx = i
+// 			fieldCount = 0
+// 			currentSize = 0
+// 		}
 
-		if currentChunk.Len() > 0 {
-			currentChunk.WriteString(delimiter)
-		}
-		currentChunk.WriteString(part)
-		currentSize += partSize
-		fieldCount++
-	}
+// 		if currentChunk.Len() > 0 {
+// 			currentChunk.WriteString(delimiter)
+// 		}
+// 		currentChunk.WriteString(part)
+// 		currentSize += partSize
+// 		fieldCount++
+// 	}
 
-	// Add remaining chunk
-	if fieldCount > 0 {
-		chunks = append(chunks, Chunk{
-			text:  currentChunk.String(),
-			start: startIdx,
-			count: fieldCount,
-		})
-	}
+// 	// Add remaining chunk
+// 	if fieldCount > 0 {
+// 		chunks = append(chunks, Chunk{
+// 			text:  currentChunk.String(),
+// 			start: startIdx,
+// 			count: fieldCount,
+// 		})
+// 	}
 
-	return chunks
-}
+// 	return chunks
+// }
 
 func initTranslateClient(credentialsJSON string, ctx context.Context) *translate.Client {
 	// Create tmp directory if it doesn't exist
@@ -104,6 +104,8 @@ func NewTranslationService(googleCreds string) *TranslationService {
 }
 
 func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, targetLanguage string) (*dto.PublicMenu, error) {
+	fmt.Println("TRANSLATING MENU BEGIN:", menuDto)
+
 	// TODO: menuDTO owner information and menu item names, description, allergens should be converted to a string
 	// representation, translated by google translate api and then parsed back into the menu owner info, item names,
 	// descriptions and allergens fields.
@@ -123,7 +125,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 	menuStringRep = append(menuStringRep, menuDto.MenuOwner.Slogan)
 	// menuStringRep = append(menuStringRep, menuDto.MenuConfiguration.CategoryOrder)
 
-	for _, item := range menuDto.MenuItems {
+	for i, item := range menuDto.MenuItems {
 		menuStringRep = append(menuStringRep, item.Name)
 		menuStringRep = append(menuStringRep, item.Description)
 		menuStringRep = append(menuStringRep, item.Allergens)
@@ -131,7 +133,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
 
-		if translationLength > maxChunkSize {
+		if translationLength > maxChunkSize || i == len(menuDto.MenuItems)-1 {
 			text := strings.Join(menuStringRep, "{0}")
 
 			fmt.Println("MENU STRING REP LENGTH:", len(text))
