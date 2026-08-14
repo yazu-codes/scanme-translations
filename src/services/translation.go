@@ -116,12 +116,12 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		return nil, err
 	}
 
-	translationLength := len(menuDto.MenuOwner.Name) + len(menuDto.MenuOwner.Slogan) + len(menuDto.MenuConfiguration.CategoryOrder)
+	translationLength := len(menuDto.MenuOwner.Name) + len(menuDto.MenuOwner.Slogan) // + len(menuDto.MenuConfiguration.CategoryOrder)
 
 	menuStringRep := []string{}
 	menuStringRep = append(menuStringRep, menuDto.MenuOwner.Name)
 	menuStringRep = append(menuStringRep, menuDto.MenuOwner.Slogan)
-	menuStringRep = append(menuStringRep, menuDto.MenuConfiguration.CategoryOrder)
+	// menuStringRep = append(menuStringRep, menuDto.MenuConfiguration.CategoryOrder)
 
 	for _, item := range menuDto.MenuItems {
 		menuStringRep = append(menuStringRep, item.Name)
@@ -165,7 +165,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 	menuDto.MenuOwner.Name = translatedStringParts[0]
 	menuDto.MenuOwner.Slogan = translatedStringParts[1]
-	menuDto.MenuConfiguration.CategoryOrder = translatedStringParts[2]
+	// menuDto.MenuConfiguration.CategoryOrder = translatedStringParts[2]
 
 	fmt.Println(translatedStringParts[3])
 
