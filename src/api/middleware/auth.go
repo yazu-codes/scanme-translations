@@ -26,7 +26,7 @@ func AuthMiddleware(redisService *services.RedisService) gin.HandlerFunc {
 		}
 
 		token := parts[1]
-		claims, err := jwtService.ValidateToken(token)
+		claims, err := redisService.ValidateToken(token)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			c.Abort()
