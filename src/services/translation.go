@@ -288,17 +288,22 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		translationLength = translationLength + len(item.Name) + len(item.Description) + len(item.Allergens) + len(item.Category)
 
 		if translationLength > maxChunkSize || i == len(menuDto.MenuItems)-1 {
-			text := strings.Join(menuStringRep, "<e/>")
+			// text := strings.Join(menuStringRep, "<e/>") TODO: UNDO THIS COMMENTING IF WE WANT TO USE THE SPLIT FUNCTION
 
 			// fmt.Println("MENU STRING REP LENGTH:", len(text))
 			// fmt.Println(text)
 
-			translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, &translate.Options{Format: translate.Text})
+			translatedStringRep, err := s.translateClient.Translate(s.ctx, menuStringRep, parsedLanguageTag, &translate.Options{Format: translate.Text})
 			if err != nil {
 				return nil, err
 			}
 
 			// fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
+
+			for _, translated := range translatedStringRep {
+				// fmt.Println("Translated:", translated.Text)
+				translatedMenu += translated.Text + "<e/>"
+			}
 
 			translatedMenu += translatedStringRep[0].Text
 			if i != len(menuDto.MenuItems)-1 {
