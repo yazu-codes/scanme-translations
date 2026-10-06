@@ -300,19 +300,19 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 			// fmt.Println("TRANSLATED:", translatedStringRep[0].Text)
 
-			for i, translated := range translatedStringRep {
+			for j, translated := range translatedStringRep {
 				// fmt.Println("Translated:", translated.Text)
 				translatedMenu += translated.Text
 
-				if i != len(translatedStringRep)-1 {
+				if j != len(translatedStringRep)-1 {
 					translatedMenu += "<e/>"
 				}
 			}
 
-			// translatedMenu += translatedStringRep[0].Text
-			// if i != len(menuDto.MenuItems)-1 {
-			// 	translatedMenu += "<e/>"
-			// }
+			translatedMenu += translatedStringRep[0].Text
+			if i != len(menuDto.MenuItems)-1 {
+				translatedMenu += "<e/>"
+			}
 
 			menuStringRep = []string{}
 
