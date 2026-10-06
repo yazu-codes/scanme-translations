@@ -309,7 +309,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 				}
 			}
 
-			translatedMenu += translatedStringRep[0].Text
+			// translatedMenu += translatedStringRep[0].Text
 			if i != len(menuDto.MenuItems)-1 {
 				translatedMenu += "<e/>"
 			}
