@@ -293,7 +293,7 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 			// fmt.Println("MENU STRING REP LENGTH:", len(text))
 			// fmt.Println(text)
 
-			translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, nil)
+			translatedStringRep, err := s.translateClient.Translate(s.ctx, []string{text}, parsedLanguageTag, &translate.Options{Format: translate.Text})
 			if err != nil {
 				return nil, err
 			}
