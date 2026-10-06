@@ -264,19 +264,19 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 		if len(item.Name) > 0 {
 			menuStringRep = append(menuStringRep, item.Name)
 		} else {
-			menuStringRep = append(menuStringRep, "/")
+			menuStringRep = append(menuStringRep, "")
 		}
 
 		if len(item.Description) > 0 {
 			menuStringRep = append(menuStringRep, item.Description)
 		} else {
-			menuStringRep = append(menuStringRep, "/")
+			menuStringRep = append(menuStringRep, "")
 		}
 
 		if len(item.Allergens) > 0 {
 			menuStringRep = append(menuStringRep, item.Allergens)
 		} else {
-			menuStringRep = append(menuStringRep, "/")
+			menuStringRep = append(menuStringRep, "")
 		}
 
 		// if len(item.Category) > 0 {
