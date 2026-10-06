@@ -334,9 +334,9 @@ func (s *TranslationService) Translate(menuDto dto.PublicMenu, sourceLanguage, t
 
 	translatedIndex := 2
 	for i, _ := range menuDto.MenuItems {
-		menuDto.MenuItems[i].Name = fmt.Sprintf("%s/%s", translatedStringParts[translatedIndex], menuDto.MenuItems[i].Name)
-		menuDto.MenuItems[i].Description = fmt.Sprintf("%s/%s", translatedStringParts[translatedIndex+1], menuDto.MenuItems[i].Description)
-		menuDto.MenuItems[i].Allergens = fmt.Sprintf("%s/%s", translatedStringParts[translatedIndex+2], menuDto.MenuItems[i].Allergens)
+		menuDto.MenuItems[i].Name = translatedStringParts[translatedIndex]
+		menuDto.MenuItems[i].Description = translatedStringParts[translatedIndex+1]
+		menuDto.MenuItems[i].Allergens = translatedStringParts[translatedIndex+2]
 		menuDto.MenuItems[i].Category = categoryMapping.FindTarget(menuDto.MenuItems[i].Category)
 		// fmt.Println("Translated item name:", menuDto.MenuItems[i].Name)
 		// fmt.Println("Translated item desc:", menuDto.MenuItems[i].Description)
